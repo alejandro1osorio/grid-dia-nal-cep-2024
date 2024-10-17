@@ -1,15 +1,18 @@
 <template>
   <div id="app">
     <Header />
+    <GridSection />
   </div>
 </template>
 
 <script>
 import Header from './components/Header.vue';
+import GridSection from './components/GridSection.vue';
 
 export default {
   components: {
     Header,
+    GridSection,
   },
 };
 </script>
