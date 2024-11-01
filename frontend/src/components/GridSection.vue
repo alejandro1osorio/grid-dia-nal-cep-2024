@@ -78,7 +78,7 @@ export default {
   },
   mounted() {
     // Cargar datos de las instituciones al montar el componente
-    axios.get('https://grid-dia-nal-cep-2024.vercel.app/api/instituciones') // http://localhost:3000/api/instituciones | /api/instituciones |
+    axios.get('/api/instituciones') // http://localhost:3000/api/instituciones | /api/instituciones |
       .then(response => {
         this.items = response.data;
       })
