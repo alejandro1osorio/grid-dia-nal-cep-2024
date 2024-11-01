@@ -11,6 +11,8 @@ export default {
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
 .header {
   display: flex;
   justify-content: center;
@@ -25,6 +27,10 @@ export default {
 }
 
 .header-text {
+  font-family: "Inter", serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
   font-size: 18px; /* Ajusta el tamaño del texto */
   color: #fff;
 }

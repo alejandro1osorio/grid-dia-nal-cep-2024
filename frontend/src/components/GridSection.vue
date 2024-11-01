@@ -1,29 +1,28 @@
 <template>
   <section class="grid-section">
-    <!-- Agregar barra de búsqueda -->
+    <!-- Barra de búsqueda -->
     <div class="search-bar">
       <input 
         v-model="searchQuery" 
         type="text" 
-        placeholder="Buscar Institución"
+        placeholder="Buscar Institución" 
         @input="filterItems" 
       />
       <button @click="filterItems">Buscar</button>
     </div>
 
+    <!-- Contenedor de tarjetas paginadas -->
     <div class="grid-container">
-      <!-- Se itera sobre cada tarjeta filtrada -->
-      <div v-for="(item, index) in filteredItems" :key="index" class="card">
-        <div class="card-image">
-          <div @click="item.fotos && item.fotos.length ? openPhotoSwipe(index) : null" style="cursor: pointer;">
-            <img
-              :src="item.fotos && item.fotos.length ? item.fotos[0] : 'https://dia-nacional-cepillado-2024.s3.us-east-1.amazonaws.com/images/logo-colgate.png'"
-              :alt="item.fotos && item.fotos.length ? 'Imagen' : 'Sin Imagen'"
-              :width="1200"
-              :height="800"
-              class="lazyload"
-            />
-          </div>
+      <div v-for="(item, index) in paginatedItems" :key="index" class="card">
+        <div class="card-image" @click="item.fotos && item.fotos.length ? openPhotoSwipe(item) : null">
+          <img 
+            :src="item.fotos && item.fotos.length ? item.fotos[0] : 'https://dia-nacional-cepillado-2024.s3.us-east-1.amazonaws.com/images/logo-colgate.png'"
+            :alt="item.fotos && item.fotos.length ? 'Imagen' : 'Sin Imagen'" 
+            :width="300" 
+            :height="200" 
+            loading="lazy"
+            class="lazyload"
+          />
         </div>
         <div class="card-content">
           <p><strong>Nombre Institución:</strong> {{ item.nombreInstitucion }}</p>
@@ -32,6 +31,13 @@
           <p><strong>Ciudad:</strong> {{ item.ciudad }}</p>
         </div>
       </div>
+    </div>
+
+    <!-- Paginación en formato Página X / Total de Páginas -->
+    <div class="pagination">
+      <button @click="previousPage" :disabled="currentPage === 1">Anterior</button>
+      <span>Página {{ currentPage }} / {{ totalPages }}</span>
+      <button @click="nextPage" :disabled="currentPage === totalPages">Siguiente</button>
     </div>
   </section>
 </template>
@@ -46,20 +52,33 @@ export default {
   name: 'GridSection',
   data() {
     return {
-      items: [], // Datos originales
-      searchQuery: '' // Query para el filtro de búsqueda
+      items: [], // Todos los datos de las instituciones
+      currentPage: 1, // Página actual para paginación
+      itemsPerPage: 15, // Tarjetas por página
+      searchQuery: '', // Query para el filtro de búsqueda
     };
   },
   computed: {
-    // Computed para filtrar los ítems en función de la búsqueda
+    // Filtrar los ítems según el texto de búsqueda
     filteredItems() {
       return this.items.filter(item => 
         item.nombreInstitucion.toLowerCase().includes(this.searchQuery.toLowerCase())
       );
+    },
+    // Determinar el número total de páginas
+    totalPages() {
+      return Math.ceil(this.filteredItems.length / this.itemsPerPage);
+    },
+    // Mostrar solo los elementos de la página actual
+    paginatedItems() {
+      const start = (this.currentPage - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return this.filteredItems.slice(start, end);
     }
   },
   mounted() {
-    axios.get('http://localhost:3000/api/instituciones') // /api/instituciones
+    // Cargar datos de las instituciones al montar el componente
+    axios.get('https://grid-dia-nal-cep-2024.vercel.app/api/instituciones') // http://localhost:3000/api/instituciones | /api/instituciones |
       .then(response => {
         this.items = response.data;
       })
@@ -68,8 +87,9 @@ export default {
       });
   },
   methods: {
-    openPhotoSwipe(index) {
-      const images = this.items[index].fotos.map(foto => ({
+    // Abrir galería de imágenes con PhotoSwipe para el item seleccionado
+    openPhotoSwipe(item) {
+      const images = item.fotos.map(foto => ({
         src: foto,
         w: 1200,
         h: 800
@@ -93,17 +113,27 @@ export default {
           img.style.objectFit = 'contain';
           img.style.maxWidth = '100vw';
           img.style.maxHeight = '100vh';
-          img.style.margin = '0';
-          img.style.padding = '0';
         }
       });
 
       lightbox.init();
       lightbox.loadAndOpen(0);
     },
-    // Método para filtrar los ítems (se invoca en tiempo real y con botón)
+    // Navegar a la página anterior
+    previousPage() {
+      if (this.currentPage > 1) {
+        this.currentPage -= 1;
+      }
+    },
+    // Navegar a la página siguiente
+    nextPage() {
+      if (this.currentPage < this.totalPages) {
+        this.currentPage += 1;
+      }
+    },
+    // Método para filtrar ítems (se invoca en tiempo real y con botón)
     filterItems() {
-      this.filteredItems;
+      this.currentPage = 1; // Reiniciar a la primera página al filtrar
     }
   }
 };
@@ -182,4 +212,39 @@ export default {
   font-style: normal;
   color: #be8900;
 }
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.pagination button {
+  padding: 8px 12px;
+  cursor: pointer;
+  border: 1px solid #ddd;
+  background-color: #c03b3b;
+  color: #fff;
+  font-weight: bold;
+  transition: background-color 0.3s, color 0.3s;
+  border-radius: 4px;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: #d71b16;
+  color: #fff;
+}
+
+.pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.pagination span {
+  font-weight: bold;
+  color: #333;
+}
+
 </style>
