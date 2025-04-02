@@ -29,30 +29,11 @@ const InstitucionSchema = new mongoose.Schema({
 
 const Institucion = mongoose.model('Institucion', InstitucionSchema, 'forms');
 
-// Variables de caché en memoria
-let institucionesCache = null;
-let institucionesCacheExpiration = 0;
-const CACHE_DURATION = process.env.CACHE_DURATION || 3600000; // Duración del caché en milisegundos (por defecto 1 hora)
-
-// Endpoint para obtener los datos de las instituciones con caché en memoria
+// ✅ Endpoint para obtener siempre los datos actualizados (sin caché)
 app.get('/api/instituciones', async (req, res) => {
   try {
-    const now = Date.now();
-
-    // Verificar si el caché existe y no ha expirado
-    if (institucionesCache && institucionesCacheExpiration > now) {
-      console.log('Datos obtenidos desde el caché en memoria');
-      return res.json(institucionesCache);
-    }
-
-    // Si el caché no existe o ha expirado, consulta a MongoDB
     const instituciones = await Institucion.find();
-
-    // Actualizar el caché en memoria y establecer la nueva expiración
-    institucionesCache = instituciones;
-    institucionesCacheExpiration = now + CACHE_DURATION;
-
-    console.log('Datos obtenidos desde MongoDB y almacenados en el caché en memoria');
+    console.log('Datos obtenidos directamente desde MongoDB');
     res.json(instituciones);
   } catch (error) {
     console.error('Error al obtener las instituciones', error);
@@ -60,17 +41,12 @@ app.get('/api/instituciones', async (req, res) => {
   }
 });
 
-// Endpoint para crear una nueva institución y limpiar el caché
+// ✅ Endpoint para crear una nueva institución
 app.post('/api/instituciones', async (req, res) => {
   try {
     const nuevaInstitucion = new Institucion(req.body);
     await nuevaInstitucion.save();
-
-    // Limpiar el caché cuando se actualicen los datos
-    institucionesCache = null;
-    institucionesCacheExpiration = 0;
-
-    console.log('Nueva institución creada. Caché en memoria eliminado.');
+    console.log('Nueva institución creada.');
     res.status(201).json(nuevaInstitucion);
   } catch (error) {
     console.error('Error al crear la institución', error);
